@@ -1,4 +1,4 @@
-//#define DEBUG
+#define DEBUG
 static char inputBuffer[12];
 int inputBufferCounter = 0;
 
@@ -14,7 +14,7 @@ void setup() {
 void readInput() {
   if (Serial.available() > 0) {
     inputBuffer[inputBufferCounter] = Serial.read();
-    if (inputBuffer[inputBuffer] == " ") s
+//    if (inputBuffer[inputBufferCounter] == " ") s
 #ifdef DEBUG
 #else
         inputBufferCounter++;
