@@ -64,7 +64,7 @@ void splitArray() {
 }
 
 bool readInput() {
-  if (Serial.available() > 0) {
+  if (Serial.available() > 0) { 
     bool returnVal = false;
     int temp = Serial.read();
 
