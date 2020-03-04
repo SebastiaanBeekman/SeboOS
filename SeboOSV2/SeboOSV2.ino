@@ -16,26 +16,56 @@ typedef struct {
 } commandType;
 
 void store() {
-  Serial.println("store");
+  Serial.println("store function");
 }
 
 void retrieve() {
-  Serial.println("retrieve");
+  Serial.println("retrieve function");
 }
 
 void erase() {
-  Serial.println("erase");
+  Serial.println("erase function");
 }
 
 void files() {
-  Serial.println("files");
+  Serial.println("files function");
+}
+
+void freespace() {
+  Serial.println("freespace function");
+}
+
+void runProgram() {
+  Serial.println("run function");
+}
+
+void list() {
+  Serial.println("list function");
+}
+
+void suspendProces() {
+  Serial.println("suspend function");
+}
+
+void resumeProces() {
+  Serial.println("resume function");
+}
+
+void killProces() {
+  Serial.println("kill function");
 }
 
 static commandType command[] = {
   {"store", &store},
   {"retrieve", &retrieve},
   {"erase", &erase},
-  {"files", &files}
+  {"files", &files},
+  {"freespace", &freespace},
+  {"run", &runProgram},
+  {"list", &list},
+  {"suspend", &suspendProces},
+  {"resume", &resumeProces},
+  {"kill", &killProces},
 };
 
 void checkCommand(char* p) {
