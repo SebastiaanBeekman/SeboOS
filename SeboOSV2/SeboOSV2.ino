@@ -4,9 +4,9 @@
 void setup() {
   Serial.begin(9600);
 #ifdef DEBUG
-  Serial.println("Welcome to SeboOS V0.1, Debug mode.");
+  Serial.println("Welcome to SeboOS V2, Debug mode.");
 #else
-  Serial.println("Welcome to SeboOS V0.1.");
+  Serial.println("Welcome to SeboOS V2.");
 #endif
 }
 
