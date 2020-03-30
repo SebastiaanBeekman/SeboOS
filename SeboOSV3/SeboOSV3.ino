@@ -6,24 +6,11 @@ typedef struct {
   int beginPos;
 } FAT;
 
-int compare(const void * a, const void * b) {
+int compare(const void * a, const void * b) {           //Compare function which returns the subtraction of two fields with the given structs (Through pointers)
   FAT *FATA = (FAT *)a;
   FAT *FATB = (FAT *)b;
   return (FATA->beginPos - FATB->beginPos);
 }
-
-FAT test1 = {"test1", 0, 812};   //6
-FAT test2 = {"test2", 16, 250};   //2
-FAT test3 = {"test3", 32, 380};   //4
-FAT test4 = {"test4", 48, 1005};  //8
-FAT test5 = {"test5", 64, 161};   //1
-FAT test6 = {"test6", 80, 956};   //7
-FAT test7 = {"test7", 96, 275};   //3
-FAT test8 = {"test8", 112, 591};   //5
-
-FAT values[] = {test1, test2, test3, test4, test5, test6, test7, test8};
-
-static bool flag = true;
 
 EERef noOfFiles = EEPROM[160];
 int sizeOfFAT = sizeof(FAT);
@@ -38,8 +25,8 @@ void setup() {
 }
 
 int writeFATEntry(char Name[], int Size) {
-  int adressFAT = checkFATSize();
-  int adressEEPROM = checkAllocationSpace(Size);
+  int adressFAT = checkFATSize();                                       //Get the position in the FAT
+  int adressEEPROM = checkAllocationSpace(Size);                        //Get the address for in the EEPROM
   if (adressFAT == -1) {
     Serial.println("There is no free space in the FAT...");
     return -1;
@@ -64,10 +51,10 @@ int checkFATSize() {
   return -1;
 }
 
-void moveFATEntry(int FATNum) {
+void moveFATEntry(int FATNum) {                                  //Function that sorts FAT
   for (int i = FATNum; i < noOfFiles - 1; i++) {
     for (int j = 0; j < sizeOfFAT; j++) {
-      EEPROM[(i * sizeOfFAT) + j] = EEPROM[((i + 1) * sizeOfFAT) + j];
+      EEPROM[(i * sizeOfFAT) + j] = EEPROM[((i + 1) * sizeOfFAT) + j];      //Set next fat to current
     }
   }
   noOfFiles--;
@@ -118,7 +105,7 @@ bool deleteFATEntry(char Name[]) {
     EEPROM.put(i, -1);
   }
   int FATpos = getFATPos(FATEntry.Name);
-  if (FATpos != -1) moveFATEntry(FATpos);
+  if (FATpos != -1) moveFATEntry(FATpos);                        //Call function which reorders FAT entries, so you dont get gaps eg. 1-2-4-7-9
   return true;
 }
 
@@ -146,11 +133,11 @@ void checkFreeSpace() {
   int largestSpaceFound = 0;
   int temp = 0;
   for (int i = 1; i < noOfFiles; i++) {
-    temp = (*(tempFAT + i)).beginPos - ((*(tempFAT + (i - 1))).beginPos + (*(tempFAT + (i - 1))).Size);
+    temp = (*(tempFAT + i)).beginPos - ((*(tempFAT + (i - 1))).beginPos + (*(tempFAT + (i - 1))).Size);       //Begin position, next entry, minus the begin position + size of the current entry gives space in between
     if (temp > largestSpaceFound) largestSpaceFound = temp;
   }
   temp = EEPROM.length() - ((*(tempFAT + (noOfFiles - 1))).beginPos + (*(tempFAT + (noOfFiles - 1))).Size);
-  if (temp > largestSpaceFound) largestSpaceFound = temp;                   //Check if there's space between last FAT and size of EEPROM
+  if (temp > largestSpaceFound) largestSpaceFound = temp;                                                     //Check if there's space between last FAT and size of EEPROM
 
   Serial.print("Largest available file space: ");
   Serial.print(largestSpaceFound);
@@ -191,7 +178,4 @@ void readEEPROM(char Name[]) {
 }
 
 void loop() {
-  if (flag) {
-  }
-  flag = false;
 }

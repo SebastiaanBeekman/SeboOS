@@ -19,20 +19,10 @@ FAT test8 = {"test8", 112, 591};   //5
 
 FAT values[] = {test1, test2, test3, test4, test5, test6, test7, test8};
 
-static bool flag = true;
-
 int compare(const void * a, const void * b) {
   FAT *FATA = (FAT *)a;
   FAT *FATB = (FAT *)b;
   return (FATA->beginPos - FATB->beginPos);
-}
-
-FAT* sortFAT() {
-  FAT FATEntry[8];
-  for (int i = 0; i < 8; i++) FATEntry[i] = readFATEntry(i);                                     //Copy the Original FAT into array, so no accidents happen & easier to work with
-  qsort(FATEntry, 8, FATSize, compare);                                                         //Call sort function 'compare'
-  Serial.println(FATEntry[1].Name);
-  return FATEntry;
 }
 
 void setup() {
@@ -40,8 +30,8 @@ void setup() {
 }
 
 void loop() {
-  if (flag) {
-    
+  if (getTest()) {
+    Serial.println("Hello");
+    Serial.println(flag);
   }
-  flag = false;
 }

@@ -1,0 +1,3 @@
+bool getTest() {
+  return true;
+}
