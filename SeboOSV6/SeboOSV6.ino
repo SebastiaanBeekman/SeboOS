@@ -50,7 +50,9 @@ char* byteToStr(byte input[], int inputSize) {                                  
 /*-----------------------------------------------------------------*/
 void loop() {
   if (flag) {
-    pushFloat(38765, 0);
-    Serial.println(popFloat(3));
+    char temp[] = {'t','e','s','t','\0'};
+    pushString(temp, sizeof(temp), 0);
+    char *p = popString(6);
+    for (int i = 0; i < 6; i++) Serial.print(*(p+i));
   } flag = false;
 }
