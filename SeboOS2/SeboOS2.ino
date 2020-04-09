@@ -31,10 +31,10 @@ void loop() {
 //    readMemory(97, 0);
 //    writeMemory(98, 2);
   } flag = false;
-  //  if (readInput()) {
-  //    checkCommand(getFunctionBuffer());
-  //    clearBuffer(getFunctionBuffer());
-  //    clearBuffer(getParameterBuffer());
-  //    clearIntBuffer(getSpaceBuffer());
-  //  }
+    if (readInput()) {
+      checkCommand(getFunctionBuffer());
+      clearBuffer(getFunctionBuffer());
+      clearBuffer(getParameterBuffer());
+      clearIntBuffer(getSpaceBuffer());
+    }
 }
