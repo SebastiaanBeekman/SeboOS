@@ -12,6 +12,13 @@ typedef struct {
   int ID;
 } MT;
 
+typedef struct {
+  char Name[12];
+  int ID;
+  int state;                                                              //States: 1 (Running), 0 (pauzed), -1 (Terminated)
+  int Registers[4];                                                       //Order: PC, FP, SP, loop addr
+} PT;
+
 static bool flag = true;
 
 void setup() {
@@ -26,13 +33,11 @@ void setup() {
 
 void loop() {
   if (flag) {
-
-//    setMem();
-//    readMemory(97, 0);
-//    writeMemory(98, 2);
+    
   } flag = false;
     if (readInput()) {
       checkCommand(getFunctionBuffer());
+      
       clearBuffer(getFunctionBuffer());
       clearBuffer(getParameterBuffer());
       clearIntBuffer(getSpaceBuffer());

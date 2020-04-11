@@ -33,14 +33,14 @@ void checkCommand(char* p) {
   if (functionFlag) Serial.println("Command not found.");
 }
 /*---------------------------------------------------------------------------*/
-void store() {
+void store() {                                                                          //Bug where store is activated twice, tried lots of tests. Conclusion: For loop i is reset back to 0
   char* p = getParameterBuffer();
   int* ip = getSpaceBuffer();
   char Name[12];
   char sizeBuffer[4];
   for (int i = 0; i < BUFFERSIZE; i++) {
-    if (i < * (ip)) Name[i] = *(p + i);
-    else sizeBuffer[i - * (ip)] = *(p + (i + 1));
+    if (i < *(ip)) Name[i] = *(p + i);                                                //if i < spaceBuffer, save name
+    else sizeBuffer[i - *(ip)] = *(p + (i + 1));                                      //else save size
   }
   if (!writeEEPROM(Name, atoi(sizeBuffer))) Serial.println("Failed to write data.");
 }
@@ -57,16 +57,10 @@ void erase() {
   char Name[12];
   strcpy(Name, p);
   if (!deleteFATEntry(Name)) Serial.println("This file doesn't exist.");
-  clearBuffer(getFunctionBuffer());
-  clearBuffer(getParameterBuffer());
-  clearIntBuffer(getSpaceBuffer());
 }
 
 void files() {
   printList();
-  clearBuffer(getFunctionBuffer());
-  clearBuffer(getParameterBuffer());
-  clearIntBuffer(getSpaceBuffer());
 }
 
 void freespace() {
@@ -78,7 +72,7 @@ void runProgram() {
 }
 
 void list() {
-  Serial.println("list.");
+  printProcessList();
 }
 
 void suspendProcess() {

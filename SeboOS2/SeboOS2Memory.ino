@@ -12,25 +12,6 @@ int compareMT(const void * a, const void * b) {           //Compare function whi
   return (MTA->addr - MTB->addr);
 }
 /*---------------------------------------------------------------------------*/
-union {                                                                         //Numbers to bytes and back
-  int32_t num;
-  byte bval[4];
-} numAsBytes;
-
-byte* strToByte(char input[], int inputSize) {                                  //String (char array) to bytes
-  static byte byteArray[ARRAYSIZE] = {};
-  memset(byteArray, NULL, ARRAYSIZE);                                           //Clear old 'string' before using
-  strcpy(byteArray, input);
-  return byteArray;
-}
-
-char* byteToStr(byte input[], int inputSize) {                                  //Byte array to string (char array pointer)
-  static char charArray[ARRAYSIZE];
-  memset(charArray, NULL, ARRAYSIZE);                                           //Clear old 'string' before using
-  strcpy(charArray, input);
-  return charArray;
-}
-/*---------------------------------------------------------------------------*/
 bool checkTableSize() {
   int temp;
   for (int i = 0; i < MTSIZE; i++) {
@@ -92,21 +73,21 @@ void deleteTableEntry(int ID) {
   }
 }
 /*---------------------------------------------------------------------------*/
-int getSize() {
+int getSize(int sp) {
   byte temp[1];
-  temp[0] = popByte();
+  temp[0] = popByte(sp--);
   char* c = byteToStr(temp, 1);
   if (*(c) == 'c') return 1;
   else if (*(c) == 'i') return 2;
   else if (*(c) == 'f') return 4;
   else if (*(c) == 's') {
-    numAsBytes.bval[0] = popByte();
+    numAsBytes.bval[0] = popByte(sp--);
     return *(int *)&numAsBytes.bval;
   } else return -1;
 }
 
-void writeMemory(byte Name, int ID) {
-  int Size = getSize();
+void writeMemory(byte Name, int ID, int sp) {
+  int Size = getSize(sp);
   char type;
   if (Size == 1) type = 'c';
   else if (Size == 2) type = 'i';
@@ -114,7 +95,7 @@ void writeMemory(byte Name, int ID) {
   else type = 's';
   int pos = writeTableEntry(Name, type, Size, ID);
   for (int i = Size; i > 0; i--) {
-    memory[pos + (i - 1)] = popByte();                  //-1 because pos is the addr of the start value, so if you write backwards you have to go 1 element lower.
+    memory[pos + (i - 1)] = popByte(sp--);                  //-1 because pos is the addr of the start value, so if you write backwards you have to go 1 element lower.
   }
   Serial.println("Data written to memory.");
 }
@@ -134,7 +115,7 @@ char getType(int Size) {
   else return 's';
 }
 
-bool readMemory(byte Name, int ID) {
+bool readMemory(byte Name, int ID, int sp) {
   MT MTEntry = getMTEntry(Name, ID);
   if (MTEntry.type == NULL) {
     Serial.println("This combination doesn't exist in the memory.");
@@ -143,12 +124,12 @@ bool readMemory(byte Name, int ID) {
   int Size = MTEntry.Size;
   int addr = MTEntry.addr;
   char type = getType(Size);
-  for (int i = addr; i < (addr + Size); i++) pushByte(memory[i]);
-  if (Size > 4) pushByte(Size);
+  for (int i = addr; i < (addr + Size); i++) pushByte(memory[i], sp++);
+  if (Size > 4) pushByte(Size, sp++);
   char temp[1];
   temp[0] = type;
   byte* b = strToByte(temp, 1);
-  pushByte(*(b));
+  pushByte(*(b), sp++);
 }
 /*---------------------------------------------------------------------------*/
 void printTable() {
