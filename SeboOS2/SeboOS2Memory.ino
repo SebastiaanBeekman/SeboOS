@@ -73,21 +73,21 @@ void deleteTableEntry(int ID) {
   }
 }
 /*---------------------------------------------------------------------------*/
-int getSize(int sp) {
+int getSize(int ID, int sp) {
   byte temp[1];
-  temp[0] = popByte(sp--);
+  temp[0] = popByte(ID, sp--);
   char* c = byteToStr(temp, 1);
   if (*(c) == 'c') return 1;
   else if (*(c) == 'i') return 2;
   else if (*(c) == 'f') return 4;
   else if (*(c) == 's') {
-    numAsBytes.bval[0] = popByte(sp--);
+    numAsBytes.bval[0] = popByte(ID, sp--);
     return *(int *)&numAsBytes.bval;
   } else return -1;
 }
 
 void writeMemory(byte Name, int ID, int sp) {
-  int Size = getSize(sp);
+  int Size = getSize(ID, sp);
   char type;
   if (Size == 1) type = 'c';
   else if (Size == 2) type = 'i';
@@ -95,7 +95,7 @@ void writeMemory(byte Name, int ID, int sp) {
   else type = 's';
   int pos = writeTableEntry(Name, type, Size, ID);
   for (int i = Size; i > 0; i--) {
-    memory[pos + (i - 1)] = popByte(sp--);                  //-1 because pos is the addr of the start value, so if you write backwards you have to go 1 element lower.
+    memory[pos + (i - 1)] = popByte(ID, sp--);                  //-1 because pos is the addr of the start value, so if you write backwards you have to go 1 element lower.
   }
   Serial.println("Data written to memory.");
 }
@@ -124,12 +124,12 @@ bool readMemory(byte Name, int ID, int sp) {
   int Size = MTEntry.Size;
   int addr = MTEntry.addr;
   char type = getType(Size);
-  for (int i = addr; i < (addr + Size); i++) pushByte(memory[i], sp++);
-  if (Size > 4) pushByte(Size, sp++);
+  for (int i = addr; i < (addr + Size); i++) pushByte(memory[i], ID, sp++);
+  if (Size > 4) pushByte(Size, ID, sp++);
   char temp[1];
   temp[0] = type;
   byte* b = strToByte(temp, 1);
-  pushByte(*(b), sp++);
+  pushByte(*(b), ID, sp++);
 }
 /*---------------------------------------------------------------------------*/
 void printTable() {
