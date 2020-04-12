@@ -33,13 +33,15 @@ void setup() {
 
 void loop() {
   if (flag) {
-    
+        char temp[] = {'t','e','s','t','2','\0'};
+        startProcess(temp);
+        runProcesses();
   } flag = false;
-    if (readInput()) {
-      checkCommand(getFunctionBuffer());
-      
-      clearBuffer(getFunctionBuffer());
-      clearBuffer(getParameterBuffer());
-      clearIntBuffer(getSpaceBuffer());
-    }
+  if (readInput()) {
+    //      checkCommand(getFunctionBuffer());
+    //
+    //      clearBuffer(getFunctionBuffer());
+    //      clearBuffer(getParameterBuffer());
+    //      clearIntBuffer(getSpaceBuffer());
+  }
 }

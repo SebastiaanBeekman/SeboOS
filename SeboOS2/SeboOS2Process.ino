@@ -3,6 +3,10 @@
 static PT PTArray[PTSIZE];
 static int IDCounter = 0;
 
+PT* getPTArray() {
+  return PTArray;
+}
+
 /*-----------------------------------------------------------------*/
 bool checkPTSize() {
   for (int i = 0; i < PTSIZE; i++) {
@@ -20,14 +24,14 @@ int writePTEntry(char Name[]) {
     Serial.println("This file doesn't exist...");
     return -1;
   }
-  int Register[] = {0, 0, 0, 0};                         //Order: PC, FP, SP, loop addr
+  int Register[] = {0, 0, 0, 0};                         //Order: Program Counter, File Pointer, Stack Pointer, loop addr
   PT PTEntry = {Name, 0, 0, Register};
   //Bug where assigning the data instantly doesn't work, but after creation it does.
   strcpy(PTEntry.Name, Name);
   PTEntry.ID = IDCounter;
   PTEntry.state = 1;
-  PTEntry.Registers[0] = FATEntry.beginPos;
-  PTEntry.Registers[1] = -1; 
+  PTEntry.Registers[0] = 0;
+  PTEntry.Registers[1] = FATEntry.beginPos; 
   PTEntry.Registers[2] = 0;
   PTEntry.Registers[3] = -1;
   
@@ -36,7 +40,7 @@ int writePTEntry(char Name[]) {
   return IDCounter;
 }
 /*-----------------------------------------------------------------*/
-bool runProcess(char Name[]) {
+bool startProcess(char Name[]) {
   int ID = writePTEntry(Name);
   if (ID == -1) return false;
   Serial.print("Process running, ID: ");
@@ -76,6 +80,10 @@ bool PRK(int ID, int state) {
     else Serial.println(" running.");
   }
   return true;
+}
+/*-----------------------------------------------------------------*/
+PT getPTEntry(int index) {
+  return PTArray[index];
 }
 /*-----------------------------------------------------------------*/
 void printProcessList() {

@@ -1,4 +1,5 @@
 #include <EEPROM.h>
+#define STORAGESIZE 1000
 
 EERef noOfFiles = EEPROM[160];
 int sizeOfFAT = sizeof(FAT);
@@ -74,6 +75,9 @@ int writeFATEntry(char Name[], int Size) {
   } else if (EEPROMAddr == -1) {
     Serial.println("There is no free space in the EEPROM...");
     return -1;
+  } else if (Size > STORAGESIZE) {
+    Serial.println("File size is too big...");
+    return -1;
   }
   FAT newFATEntry = {"", Size, EEPROMAddr};
   strcpy(newFATEntry.Name, Name);
@@ -134,13 +138,16 @@ bool writeEEPROM(char Name[], int Size) {
   return true;
 }
 /*---------------------------------------------------------------------------*/
-void readEEPROM(char Name[]) {
+byte* readEEPROM(char Name[]) {
   FAT FATEntry = readFATEntry(Name);
+  static byte byteArray[STORAGESIZE + 1];
   if (strncmp(Name, FATEntry.Name, 12) != 0) {
     Serial.println("Name doesn't exist in memory, try again.");
     return;
   }
-  for (int i = FATEntry.beginPos; i < (FATEntry.beginPos + FATEntry.Size); i++) Serial.println(EEPROM.read(i));
+  for (int i = FATEntry.beginPos; i < (FATEntry.beginPos + FATEntry.Size); i++) byteArray[i] = EEPROM.read(i);
+  byteArray[STORAGESIZE] = FATEntry.Size;
+  return byteArray;
 }
 /*---------------------------------------------------------------------------*/
 void checkFreeSpace() {
