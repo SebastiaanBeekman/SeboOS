@@ -33,15 +33,27 @@ void setup() {
 
 void loop() {
   if (flag) {
-        char temp[] = {'t','e','s','t','2','\0'};
-        startProcess(temp);
-        runProcesses();
+    //        char temp[] = {'t','e','s','t','2','\0'};
+    //        startProcess(temp);
+    //        runProcesses();
+    //        clearFAT();
+    //        fillFAT();
   } flag = false;
   if (readInput()) {
-    //      checkCommand(getFunctionBuffer());
-    //
-    //      clearBuffer(getFunctionBuffer());
-    //      clearBuffer(getParameterBuffer());
-    //      clearIntBuffer(getSpaceBuffer());
+    int test = checkCommand(getFunctionBuffer());
+    if (test == 1) {
+      char *pf = getFunctionBuffer();
+      char *pp = getParameterBuffer();
+      int *ps = getSpaceBuffer();
+      for (int i = 0; i < 20; i++) {
+        *(pf + i) = NULL;
+        *(pp + i) = NULL;
+        *(ps + i) = 0;
+      }
+    } else {
+      clearBuffer(getFunctionBuffer());
+      clearBuffer(getParameterBuffer());
+      clearIntBuffer(getSpaceBuffer());
+    }
   }
 }

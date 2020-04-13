@@ -130,24 +130,29 @@ bool writeEEPROM(char Name[], int Size) {
   byte data[Size];
   Serial.println("What would you like to store:");
   Serial.readBytes(data, Size);
-  for (int i = 0; i < Size; i++) {
-//    EEPROM.write(pos + i, data[i]);
+  for (byte b : data) {
+    EEPROM.write(pos++, b);
   }
   noOfFiles++;
   Serial.println("Data stored.");
+  Serial.read();                                                                      //Catch the \n
   return true;
 }
 /*---------------------------------------------------------------------------*/
-byte* readEEPROM(char Name[]) {
+char readEEPROM(char Name[], int index) {
   FAT FATEntry = readFATEntry(Name);
-  static byte byteArray[STORAGESIZE + 1];
+  char c = EEPROM.read(FATEntry.beginPos + index);
+  return c;
+}
+/*---------------------------------------------------------------------------*/
+void printFile(char Name[]) {
+  FAT FATEntry = readFATEntry(Name);
+  byte byteArray[FATEntry.Size];
   if (strncmp(Name, FATEntry.Name, 12) != 0) {
     Serial.println("Name doesn't exist in memory, try again.");
     return;
   }
-  for (int i = FATEntry.beginPos; i < (FATEntry.beginPos + FATEntry.Size); i++) byteArray[i] = EEPROM.read(i);
-  byteArray[STORAGESIZE] = FATEntry.Size;
-  return byteArray;
+  for (int i = FATEntry.beginPos; i < (FATEntry.beginPos + FATEntry.Size); i++) Serial.print((char)EEPROM.read(i));
 }
 /*---------------------------------------------------------------------------*/
 void checkFreeSpace() {

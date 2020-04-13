@@ -33,7 +33,7 @@ int writePTEntry(char Name[]) {
   PTEntry.Registers[0] = 0;
   PTEntry.Registers[1] = FATEntry.beginPos; 
   PTEntry.Registers[2] = 0;
-  PTEntry.Registers[3] = -1;
+  PTEntry.Registers[3] = 0;
   
   PTArray[IDCounter] = PTEntry;
   Serial.println("Processtable Entry created.");

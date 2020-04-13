@@ -20,7 +20,7 @@ static commandType command[] = {
 
 int sizeOfCommandList = sizeof(command) / sizeof(commandType);
 
-void checkCommand(char* p) {
+int checkCommand(char* p) {
   bool functionFlag = true;
   for (int i = 0; i < sizeOfCommandList; i++) {
     if (strncmp(command[i].Name, p, sizeof(command[i].Name)) == 0) {
@@ -28,9 +28,11 @@ void checkCommand(char* p) {
       void (*func)() = command[i].func;
       func();
     }
-    if (!functionFlag) break;
+    if (!functionFlag && i == 0) return 1;
+    if (!functionFlag) return 0;
   }
-  if (functionFlag) Serial.println("Command not found.");
+  if (functionFlag) Serial.println("Command not found. Known commands:\nstore, retrieve, erase, files, freespace, run, list, suspend, resume and kill.");
+  return -1;
 }
 /*---------------------------------------------------------------------------*/
 void store() {                                                                          //Bug where store is activated twice, tried lots of tests. Conclusion: For loop i is reset back to 0
@@ -39,8 +41,8 @@ void store() {                                                                  
   char Name[12];
   char sizeBuffer[4];
   for (int i = 0; i < BUFFERSIZE; i++) {
-    if (i < *(ip)) Name[i] = *(p + i);                                                //if i < spaceBuffer, save name
-    else sizeBuffer[i - *(ip)] = *(p + (i + 1));                                      //else save size
+    if (i < * (ip)) Name[i] = *(p + i);                                               //if i < spaceBuffer, save name
+    else sizeBuffer[i - * (ip)] = *(p + (i + 1));                                     //else save size
   }
   if (!writeEEPROM(Name, atoi(sizeBuffer))) Serial.println("Failed to write data.");
 }
@@ -49,7 +51,7 @@ void retrieve() {
   char* p = getParameterBuffer();
   char Name[12];
   strcpy(Name, p);
-  readEEPROM(Name);
+  printFile(Name);
 }
 
 void erase() {
@@ -68,7 +70,11 @@ void freespace() {
 }
 
 void runProgram() {
-  Serial.println("run.");
+  char* p = getParameterBuffer();
+  char Name[12];
+  strcpy(Name, p);
+  if(!startProcess(Name)) Serial.println("Failed to start process.");
+  runProcesses();
 }
 
 void list() {
@@ -125,7 +131,7 @@ bool readInput() {
         bufferCounter++;
       }
     } else if (inputChar == 10) {                 //Check if input value is a newLine, if so add terminating zero, reset counter & return true (input finished)
-      *(p + bufferCounter) = 0;
+      *(p + bufferCounter) = '\0';
       bufferCounter = 0;
       spaceCounter = 0;
       parameterFlag = false;
