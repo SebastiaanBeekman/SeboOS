@@ -4,7 +4,7 @@
 static byte stack[STACKAMOUNT][STACKSIZE];
 
 void pushByte(byte b, int processID, int sp) {
-  stack[processID][sp] = b;
+  stack[processID][++sp] = b;
 }
 
 byte popByte(int processID, int sp) {

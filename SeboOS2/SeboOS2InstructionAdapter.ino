@@ -18,15 +18,16 @@ void executeInstruction(int PTIndex) {
   int instruction;
   int i;
   for (i = loopAddr; i < readFATEntry(entry.Name).Size; i++) {
+    loopAddr++;
     *(p + (i - entry.Registers[3])) = readEEPROM(entry.Name, i);
     instruction = instructionAdapter();
     if (instruction != -1) break;
   }
-  if (loopAddr == (readFATEntry(entry.Name).Size - 1)) loopAddr = 0;
-  Serial.println(instruction);
-  //  Serial.println(loopAddr);
-  entry.Registers[0] = instruction;
-  entry.Registers[3] = loopAddr + i;
+  if (loopAddr >= (readFATEntry(entry.Name).Size - 1)) {
+    loopAddr = 0;
+  }
+  updateProcessRegisters(PTIndex, instruction, loopAddr++);                                             //Extra ++ to set it to the next byte
+//  Serial.println(getPTEntry(PTIndex).Registers[3]);
 }
 
 int instructionAdapter() {

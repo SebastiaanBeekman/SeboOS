@@ -135,7 +135,7 @@ bool writeEEPROM(char Name[], int Size) {
   }
   noOfFiles++;
   Serial.println("Data stored.");
-  Serial.read();                                                                      //Catch the \n
+  while (Serial.available() > 0) Serial.read();                                                                      //Catch the \n
   return true;
 }
 /*---------------------------------------------------------------------------*/

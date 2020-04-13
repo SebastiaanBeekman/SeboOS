@@ -82,15 +82,18 @@ void list() {
 }
 
 void suspendProcess() {
-  Serial.println("suspend.");
+  char* p = getParameterBuffer();
+  PRK(atoi(p), 0);
 }
 
 void resumeProcess() {
-  Serial.println("resume.");
+  char* p = getParameterBuffer();
+  PRK(atoi(p), 1);
 }
 
 void killProcess() {
-  Serial.println("kill.");
+  char* p = getParameterBuffer();
+  PRK(atoi(p), -1);
 }
 /*---------------------------------------------------------------------------*/
 char* getFunctionBuffer() {

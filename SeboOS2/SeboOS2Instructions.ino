@@ -11,11 +11,30 @@ void runProcesses() {
   }
 }
 
+void charInstruction(int PTIndex) {
+  PT entry = getPTEntry(PTIndex);
+  int sp = entry.Registers[2];
+  int loopAddr = entry.Registers[3];
+
+  loopAddr++;                                                                                         //Comma
+  loopAddr++;                                                                                         //Open quote
+  byte b = readEEPROM(entry.Name, loopAddr++);
+  loopAddr++;                                                                                         //Close quote
+  loopAddr++;                                                                                         //Next instruction
+  pushByte(b, entry.ID, ++sp);
+  pushByte('c', entry.ID, ++sp);
+  updateInstructionRegisters(PTIndex, sp, loopAddr);
+}
+
+void stringInstruction(int PTIndex) {
+  
+}
+
 void execute(int PTIndex) {
   PT entry = getPTEntry(PTIndex);
   switch (entry.Registers[0]) {
     case CHAR:
-      Serial.println("Char type");
+      charInstruction(PTIndex);
       break;
     case INT:
       Serial.println("Int type");
@@ -188,7 +207,7 @@ void execute(int PTIndex) {
     case READSTRING:
       Serial.println("READSTRING type");
       break;
-        case IF:
+    case IF:
       Serial.println("IF type");
       break;
     case ELSE:
@@ -218,6 +237,8 @@ void execute(int PTIndex) {
     case WAITUNTILDONE:
       Serial.println("WAITUNTILDONE type");
       break;
-    
   }
+  if (readFATEntry(entry.Name).Size < getPTEntry(PTIndex).Registers[3]) updateLoopAddr(PTIndex, 0);
+  Serial.println(getPTEntry(PTIndex).Registers[2]);
+  Serial.println(getPTEntry(PTIndex).Registers[3]);
 }

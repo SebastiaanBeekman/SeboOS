@@ -32,7 +32,7 @@ int writePTEntry(char Name[]) {
   PTEntry.state = 1;
   PTEntry.Registers[0] = 0;
   PTEntry.Registers[1] = FATEntry.beginPos; 
-  PTEntry.Registers[2] = 0;
+  PTEntry.Registers[2] = -1;
   PTEntry.Registers[3] = 0;
   
   PTArray[IDCounter] = PTEntry;
@@ -84,6 +84,20 @@ bool PRK(int ID, int state) {
 /*-----------------------------------------------------------------*/
 PT getPTEntry(int index) {
   return PTArray[index];
+}
+/*-----------------------------------------------------------------*/
+void updateProcessRegisters(int index, int PC, int loopAddr) {
+  PTArray[index].Registers[0] = PC;
+  PTArray[index].Registers[3] = loopAddr;
+}
+
+void updateInstructionRegisters(int index, int sp, int loopAddr) {
+  PTArray[index].Registers[2] = sp;
+  PTArray[index].Registers[3] = loopAddr;
+}
+
+void updateLoopAddr(int index, int loopAddr) {
+  PTArray[index].Registers[3] = loopAddr;
 }
 /*-----------------------------------------------------------------*/
 void printProcessList() {

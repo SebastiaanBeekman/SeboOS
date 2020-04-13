@@ -33,11 +33,6 @@ void setup() {
 
 void loop() {
   if (flag) {
-    //        char temp[] = {'t','e','s','t','2','\0'};
-    //        startProcess(temp);
-    //        runProcesses();
-    //        clearFAT();
-    //        fillFAT();
   } flag = false;
   if (readInput()) {
     int test = checkCommand(getFunctionBuffer());
@@ -55,5 +50,6 @@ void loop() {
       clearBuffer(getParameterBuffer());
       clearIntBuffer(getSpaceBuffer());
     }
-  }
-}
+  } //readInput
+//  runProcesses();                                                   //Run programs
+} //loop
