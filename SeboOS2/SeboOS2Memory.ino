@@ -74,15 +74,13 @@ void deleteTableEntry(int ID) {
 }
 /*---------------------------------------------------------------------------*/
 int getSize(int ID, int sp) {
-  byte temp[1];
-  temp[0] = popByte(ID, sp--);
-  char* c = byteToStr(temp, 1);
-  if (*(c) == 'c') return 1;
-  else if (*(c) == 'i') return 2;
-  else if (*(c) == 'f') return 4;
-  else if (*(c) == 's') {
-    numAsBytes.bval[0] = popByte(ID, sp--);
-    return *(int *)&numAsBytes.bval;
+  char c = popByte(ID, sp--);
+  if (c == 'c') return 1;
+  else if (c == 'i') return 2;
+  else if (c == 'f') return 4;
+  else if (c == 's') {
+    int i = popByte(ID, sp--);
+    return i;
   } else return -1;
 }
 

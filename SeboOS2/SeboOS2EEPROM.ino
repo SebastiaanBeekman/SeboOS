@@ -10,14 +10,14 @@ int compare(const void * a, const void * b) {                                   
   return (FATA->beginPos - FATB->beginPos);
 }
 
-FAT test1 = {"test1", 0, 812};    //6
+FAT test1 = {"test1", 90, 161};    //6
 FAT test2 = {"test2", 16, 250};   //2
 FAT test3 = {"test3", 32, 380};   //4
 FAT test4 = {"test4", 48, 1005};  //8
 FAT test5 = {"test5", 64, 161};   //1
 FAT test6 = {"test6", 80, 956};   //7
 
-FAT values[] = {test1, test2, test3, test4, test5, test6};
+FAT values[] = {test1, test2, test3/*, test4, test5, test6*/};
 /*---------------------------------------------------------------------------*/
 int checkFATSize() {
   int temp;
@@ -42,6 +42,7 @@ FAT* sortFAT() {
 }
 
 int checkAllocSpaceEEPROM(byte fileSize) {
+  if (noOfFiles == 0) return 161;
   FAT* tempFAT = sortFAT();                                                                                //Use sorted FAT
   for (int i = 0; i < noOfFiles; i++) {
     if (tempFAT[i + 1].beginPos - (tempFAT[i].beginPos + tempFAT[i].Size) > fileSize) {                    //Compare the space between the EEPROM adresses
@@ -66,6 +67,7 @@ bool checkFATDuplicates(char Name[]) {
 int writeFATEntry(char Name[], int Size) {
   int FATAddr = checkFATSize();
   int EEPROMAddr = checkAllocSpaceEEPROM(Size);
+  Serial.println(EEPROMAddr);
   if (FATAddr == -1) {
     Serial.println("There is no free space in the FAT...");
     return -1;
@@ -139,10 +141,13 @@ bool writeEEPROM(char Name[], int Size) {
   return true;
 }
 /*---------------------------------------------------------------------------*/
-char readEEPROM(char Name[], int index) {
+byte readEEPROM(char Name[], int index) {
   FAT FATEntry = readFATEntry(Name);
-  char c = EEPROM.read(FATEntry.beginPos + index);
-  return c;
+  byte b = EEPROM.read(FATEntry.beginPos + index);
+//  Serial.print(b);
+//  Serial.print(":");
+//  Serial.println((char)b);
+  return b;
 }
 /*---------------------------------------------------------------------------*/
 void printFile(char Name[]) {
@@ -153,6 +158,7 @@ void printFile(char Name[]) {
     return;
   }
   for (int i = FATEntry.beginPos; i < (FATEntry.beginPos + FATEntry.Size); i++) Serial.print((char)EEPROM.read(i));
+  Serial.println();
 }
 /*---------------------------------------------------------------------------*/
 void checkFreeSpace() {
@@ -195,6 +201,6 @@ void clearFAT() {
 }
 
 void fillFAT() {
+  noOfFiles = sizeof(values) / sizeof(FAT);
   for (int i = 0; i < noOfFiles; i++) EEPROM.put(sizeOfFAT * i, values[i]);
-  noOfFiles = 6;
 }

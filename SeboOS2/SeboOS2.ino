@@ -33,6 +33,8 @@ void setup() {
 
 void loop() {
   if (flag) {
+    clearFAT();
+    fillFAT();
   } flag = false;
   if (readInput()) {
     int test = checkCommand(getFunctionBuffer());
@@ -51,5 +53,5 @@ void loop() {
       clearIntBuffer(getSpaceBuffer());
     }
   } //readInput
-//  runProcesses();                                                   //Run programs
+  runProcesses();                                                   //Run programs
 } //loop

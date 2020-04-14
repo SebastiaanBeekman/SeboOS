@@ -6,6 +6,10 @@ char* getCompareBuffer() {
   return compareBuffer;
 }
 
+void clearCompareBuffer(char* p) {
+  memset(p, 0, INSTRUCTIONSIZE);
+}
+
 void printBuffer() {
   char *p = getCompareBuffer();
   for (int i = 0; i < INSTRUCTIONSIZE; i++) Serial.println(*(p + i));
@@ -26,15 +30,19 @@ void executeInstruction(int PTIndex) {
   if (loopAddr >= (readFATEntry(entry.Name).Size - 1)) {
     loopAddr = 0;
   }
-  updateProcessRegisters(PTIndex, instruction, loopAddr++);                                             //Extra ++ to set it to the next byte
-//  Serial.println(getPTEntry(PTIndex).Registers[3]);
+  updateProcessRegisters(PTIndex, instruction, loopAddr++);                                             //Extra ++ to set it to the next byte (comma)
+  clearCompareBuffer(getCompareBuffer());                                                                      
 }
 
 int instructionAdapter() {
   char instruction[INSTRUCTIONSIZE] = {};
   char *p = getCompareBuffer();
-  for (int i = 0; i < INSTRUCTIONSIZE; i++) instruction[i] = *(p + i);
-
+  for (int i = 0; i < INSTRUCTIONSIZE; i++) {
+    instruction[i] = *(p + i);
+//    Serial.print(instruction[i]);
+  }
+//  Serial.println();
+  
   if (strcmp(instruction, "CHAR") == 0) return 1;
   else if (strcmp(instruction, "INT") == 0) return 2;
   else if (strcmp(instruction, "STRING") == 0) return 3;

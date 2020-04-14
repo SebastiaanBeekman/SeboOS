@@ -1,5 +1,6 @@
 #include "instruction_set.h"
 #define PTSIZE 10
+#define STRINGSIZE 30
 
 void runProcesses() {
   PT *p = getPTArray();
@@ -16,18 +17,84 @@ void charInstruction(int PTIndex) {
   int sp = entry.Registers[2];
   int loopAddr = entry.Registers[3];
 
-  loopAddr++;                                                                                         //Comma
   loopAddr++;                                                                                         //Open quote
-  byte b = readEEPROM(entry.Name, loopAddr++);
-  loopAddr++;                                                                                         //Close quote
+  loopAddr++;                                                                                         //Char
+  byte b = readEEPROM(entry.Name, loopAddr++);                                                        //Close quote
+  loopAddr++;                                                                                         //Comma
   loopAddr++;                                                                                         //Next instruction
   pushByte(b, entry.ID, ++sp);
   pushByte('c', entry.ID, ++sp);
   updateInstructionRegisters(PTIndex, sp, loopAddr);
 }
 
+void intInstruction(int PTIndex) {
+  PT entry = getPTEntry(PTIndex);
+  int sp = entry.Registers[2];
+  int loopAddr = entry.Registers[3];
+
+  int num1, num2;
+
+  loopAddr++;                                                                                        //Comma
+  num1 = readEEPROM(entry.Name, loopAddr++);
+  loopAddr++;                                                                                        //Comma
+  num2 = readEEPROM(entry.Name, loopAddr++);
+  Serial.println(num1);
+  Serial.println(num2);
+}
+
 void stringInstruction(int PTIndex) {
-  
+  PT entry = getPTEntry(PTIndex);
+  int sp = entry.Registers[2];
+  int loopAddr = entry.Registers[3];
+
+  char stringArray[STRINGSIZE] = {};
+  int loopCounter = 0;
+  byte b;
+
+  do {
+    b = readEEPROM(entry.Name, loopAddr++);                                                             //Close quote
+    if (b != 39 && b != 44) {
+      if (b == 92) {
+        stringArray[loopCounter++] = 10;  //Change \n to newline byte & skip the 'n' (data is saved as a '\' & 'n')
+        loopAddr++;
+      }
+      else stringArray[loopCounter++] = b;
+      pushByte(b, entry.ID, ++sp);
+    }
+  } while (b != 48);
+  loopAddr++;                                                                                         //Next instruction
+  pushByte(loopCounter, entry.ID, ++sp);
+  pushByte('s', entry.ID, ++sp);
+  updateInstructionRegisters(PTIndex, sp, loopAddr);
+}
+
+void printInstruction(int PTIndex, bool newLine) {
+  PT entry = getPTEntry(PTIndex);
+  int sp = entry.Registers[2];
+  int loopAddr = entry.Registers[3];
+  char type;
+
+  int printSize = getSize(PTIndex, sp--);
+  if (printSize == 1) type = 'c';
+  else if (printSize == 2) type = 'i';
+  else if (printSize == 4) type = 'f';
+  else type = 's';
+
+  for (int i = 0; i < printSize; i++) {
+    byte b = popByte(PTIndex, printSize - 1 - sp--);
+    if (b == 92) Serial.println();
+    else {
+      if (type == 'c' || type == 's') Serial.print((char)b);
+      else if (type == 'i') Serial.print((int)b);
+      else if (type == 'f') Serial.print((float)b);
+    }
+  }
+  if (newLine) Serial.println();
+  updateInstructionRegisters(PTIndex, sp - 1, loopAddr);
+}
+
+void stopInstruction(int PTIndex) {
+  PRK(PTIndex, -1);
 }
 
 void execute(int PTIndex) {
@@ -37,10 +104,10 @@ void execute(int PTIndex) {
       charInstruction(PTIndex);
       break;
     case INT:
-      Serial.println("Int type");
+      intInstruction(PTIndex);
       break;
     case STRING:
-      Serial.println("String type");
+      stringInstruction(PTIndex);
       break;
     case FLOAT:
       Serial.println("FLOAT type");
@@ -181,10 +248,10 @@ void execute(int PTIndex) {
       Serial.println("DIGITALWRITE type");
       break;
     case PRINT:
-      Serial.println("PRINT type");
+      printInstruction(PTIndex, false);
       break;
     case PRINTLN:
-      Serial.println("PRINTLN type");
+      printInstruction(PTIndex, true);
       break;
     case OPEN:
       Serial.println("OPEN type");
@@ -229,7 +296,7 @@ void execute(int PTIndex) {
       Serial.println("ENDLOOP type");
       break;
     case STOP:
-      Serial.println("STOP type");
+      stopInstruction(PTIndex);
       break;
     case FORK:
       Serial.println("FORK type");
@@ -239,6 +306,8 @@ void execute(int PTIndex) {
       break;
   }
   if (readFATEntry(entry.Name).Size < getPTEntry(PTIndex).Registers[3]) updateLoopAddr(PTIndex, 0);
-  Serial.println(getPTEntry(PTIndex).Registers[2]);
-  Serial.println(getPTEntry(PTIndex).Registers[3]);
+//  if (entry.Registers[0] != -1) {
+//    Serial.println(getPTEntry(PTIndex).Registers[2]);
+//    Serial.println(getPTEntry(PTIndex).Registers[3]);
+//  }
 }
