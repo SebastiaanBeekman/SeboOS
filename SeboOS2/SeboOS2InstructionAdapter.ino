@@ -94,7 +94,6 @@ int instructionAdapter() {
   else if (strcmp(instruction, "DIGITALREAD") == 0) return 49;
   else if (strcmp(instruction, "DIGITALWRITE") == 0) return 50;
   else if (strcmp(instruction, "PRINT") == 0) return 51;
-  else if (strcmp(instruction, "PRINTLN") == 0) return 52;
   else if (strcmp(instruction, "OPEN") == 0) return 53;
   else if (strcmp(instruction, "CLOSE") == 0) return 54;
   else if (strcmp(instruction, "WRITE") == 0) return 55;

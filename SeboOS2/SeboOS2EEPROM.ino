@@ -17,7 +17,7 @@ FAT test4 = {"test4", 48, 1005};  //8
 FAT test5 = {"test5", 64, 161};   //1
 FAT test6 = {"test6", 80, 956};   //7
 
-FAT values[] = {test1, test2, test3/*, test4, test5, test6*/};
+FAT values[] = {test1/*, test2, test3/*, test4, test5, test6*/};
 /*---------------------------------------------------------------------------*/
 int checkFATSize() {
   int temp;
@@ -42,8 +42,14 @@ FAT* sortFAT() {
 }
 
 int checkAllocSpaceEEPROM(byte fileSize) {
-  if (noOfFiles == 0) return 161;
   FAT* tempFAT = sortFAT();                                                                                //Use sorted FAT
+  Serial.print("FAT: ");
+  Serial.println(tempFAT[0].Size);
+
+  if (noOfFiles == 0) return 161;
+  else if (noOfFiles == 1) return 161 + tempFAT[0].Size;
+  else if (noOfFiles == 2) return 161 + tempFAT[0].Size + tempFAT[1].Size;
+
   for (int i = 0; i < noOfFiles; i++) {
     if (tempFAT[i + 1].beginPos - (tempFAT[i].beginPos + tempFAT[i].Size) > fileSize) {                    //Compare the space between the EEPROM adresses
       return tempFAT[i].beginPos + tempFAT[i].Size;
@@ -67,6 +73,7 @@ bool checkFATDuplicates(char Name[]) {
 int writeFATEntry(char Name[], int Size) {
   int FATAddr = checkFATSize();
   int EEPROMAddr = checkAllocSpaceEEPROM(Size);
+  Serial.print("EEPROM: ");
   Serial.println(EEPROMAddr);
   if (FATAddr == -1) {
     Serial.println("There is no free space in the FAT...");
@@ -84,7 +91,6 @@ int writeFATEntry(char Name[], int Size) {
   FAT newFATEntry = {"", Size, EEPROMAddr};
   strcpy(newFATEntry.Name, Name);
   EEPROM.put(FATAddr, newFATEntry);
-  Serial.println("FAT Entry created.");
   return EEPROMAddr;
 }
 /*---------------------------------------------------------------------------*/
@@ -144,9 +150,9 @@ bool writeEEPROM(char Name[], int Size) {
 byte readEEPROM(char Name[], int index) {
   FAT FATEntry = readFATEntry(Name);
   byte b = EEPROM.read(FATEntry.beginPos + index);
-//  Serial.print(b);
-//  Serial.print(":");
-//  Serial.println((char)b);
+  //  Serial.print(b);
+  //  Serial.print(":");
+  //  Serial.println((char)b);
   return b;
 }
 /*---------------------------------------------------------------------------*/

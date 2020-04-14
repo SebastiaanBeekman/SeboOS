@@ -33,8 +33,8 @@ void setup() {
 
 void loop() {
   if (flag) {
-    clearFAT();
-    fillFAT();
+//    clearFAT();
+//    fillFAT();
   } flag = false;
   if (readInput()) {
     int test = checkCommand(getFunctionBuffer());

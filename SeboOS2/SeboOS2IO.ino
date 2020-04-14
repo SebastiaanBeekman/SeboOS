@@ -38,11 +38,11 @@ int checkCommand(char* p) {
 void store() {                                                                          //Bug where store is activated twice, tried lots of tests. Conclusion: For loop i is reset back to 0
   char* p = getParameterBuffer();
   int* ip = getSpaceBuffer();
-  char Name[BUFFERSIZE];
+  char Name[BUFFERSIZE] = {};
   char sizeBuffer[4];
-  for (int i = 0; i < BUFFERSIZE; i++) {
-    if (i < *(ip)) Name[i] = *(p + i);                                              //if i < spaceBuffer, save name
-    else sizeBuffer[i - * (ip)] = *(p + (i + 1));                                     //else save size
+  for (int i = 0; i < BUFFERSIZE + 4; i++) {
+    if (i < *(ip)) Name[i] = *(p + i);                                             //if i < spaceBuffer, save name
+    else sizeBuffer[i - * (ip)] = *(p + (i + 1));                                  //else save size
   }
   if (!writeEEPROM(Name, atoi(sizeBuffer))) Serial.println("Failed to write data.");
 }
@@ -73,7 +73,7 @@ void runProgram() {
   char* p = getParameterBuffer();
   char Name[12];
   strcpy(Name, p);
-  if (!startProcess(Name)) Serial.println("Failed to start process.");
+  startProcess(Name);
 }
 
 void list() {

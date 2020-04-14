@@ -32,14 +32,17 @@ void intInstruction(int PTIndex) {
   int sp = entry.Registers[2];
   int loopAddr = entry.Registers[3];
 
-  int num1, num2;
+  int num1, num2, num3;
 
   loopAddr++;                                                                                        //Comma
-  num1 = readEEPROM(entry.Name, loopAddr++);
+  num1 = readEEPROM(entry.Name, loopAddr++) - 48;
   loopAddr++;                                                                                        //Comma
-  num2 = readEEPROM(entry.Name, loopAddr++);
-  Serial.println(num1);
-  Serial.println(num2);
+  num2 = readEEPROM(entry.Name, loopAddr++) - 48;
+  loopAddr++;
+  pushByte(num1, entry.ID, ++sp);
+  pushByte(num2, entry.ID, ++sp);
+  pushByte('i', entry.ID, ++sp);
+  updateInstructionRegisters(PTIndex, sp, loopAddr);
 }
 
 void stringInstruction(int PTIndex) {
@@ -68,33 +71,66 @@ void stringInstruction(int PTIndex) {
   updateInstructionRegisters(PTIndex, sp, loopAddr);
 }
 
-void printInstruction(int PTIndex, bool newLine) {
+void printInstruction(int PTIndex) {
   PT entry = getPTEntry(PTIndex);
   int sp = entry.Registers[2];
   int loopAddr = entry.Registers[3];
   char type;
+  byte ba[2] = {};
 
   int printSize = getSize(PTIndex, sp--);
   if (printSize == 1) type = 'c';
   else if (printSize == 2) type = 'i';
   else if (printSize == 4) type = 'f';
-  else type = 's';
-
-  for (int i = 0; i < printSize; i++) {
-    byte b = popByte(PTIndex, printSize - 1 - sp--);
-    if (b == 92) Serial.println();
-    else {
-      if (type == 'c' || type == 's') Serial.print((char)b);
-      else if (type == 'i') Serial.print((int)b);
-      else if (type == 'f') Serial.print((float)b);
-    }
+  else {
+    type = 's';
+    sp = sp - 2;
   }
-  if (newLine) Serial.println();
-  updateInstructionRegisters(PTIndex, sp - 1, loopAddr);
+
+  for (int i = printSize; i > 0; i--) {
+    byte b = popByte(PTIndex, sp - i);
+    if (type == 'c' || type == 's')Serial.print((char)b);
+    else if (type == 'i') ba[printSize - i] = b;
+    else if (type == 'f') Serial.print((float)b);
+  }
+  if (type == 'i') Serial.println((ba[0] * 256) + ba[1]);
+  else Serial.println();
+  loopAddr++;
+  updateInstructionRegisters(PTIndex, sp - printSize, loopAddr);
 }
 
 void stopInstruction(int PTIndex) {
   PRK(PTIndex, -1);
+}
+
+void setInstruction(int PTIndex) {
+  PT entry = getPTEntry(PTIndex);
+  int sp = entry.Registers[2];
+  int loopAddr = entry.Registers[3];
+
+  loopAddr++;                                                                                         //Open quote
+  loopAddr++;                                                                                         //Char
+  byte b = readEEPROM(entry.Name, loopAddr++);                                                        //Close quote
+  loopAddr++;                                                                                         //Comma
+  loopAddr++;                                                                                         //Next instruction
+
+  int newSP = writeMemory(b, PTIndex, sp);
+  updateInstructionRegisters(PTIndex, newSP, loopAddr);
+}
+
+void getInstruction(int PTIndex) {
+  PT entry = getPTEntry(PTIndex);
+  int sp = entry.Registers[2];
+  int loopAddr = entry.Registers[3];
+
+  loopAddr++;                                                                                         //Open quote
+  loopAddr++;                                                                                         //Char
+  byte b = readEEPROM(entry.Name, loopAddr++);                                                        //Close quote
+  loopAddr++;                                                                                         //Comma
+  loopAddr++;                                                                                         //Next instruction
+
+  int newSP = readMemory(b, PTIndex, sp);
+  updateInstructionRegisters(PTIndex, newSP, loopAddr);
 }
 
 void execute(int PTIndex) {
@@ -109,14 +145,14 @@ void execute(int PTIndex) {
     case STRING:
       stringInstruction(PTIndex);
       break;
-    case FLOAT:
+    case FLOAT:                                                                             //Bytecode???
       Serial.println("FLOAT type");
       break;
     case SET:
-      Serial.println("SET type");
+      setInstruction(PTIndex);
       break;
     case GET:
-      Serial.println("GET type");
+      getInstruction(PTIndex);
       break;
     case INCREMENT:
       Serial.println("INCREMENT type");
@@ -248,10 +284,7 @@ void execute(int PTIndex) {
       Serial.println("DIGITALWRITE type");
       break;
     case PRINT:
-      printInstruction(PTIndex, false);
-      break;
-    case PRINTLN:
-      printInstruction(PTIndex, true);
+      printInstruction(PTIndex);
       break;
     case OPEN:
       Serial.println("OPEN type");
@@ -306,8 +339,8 @@ void execute(int PTIndex) {
       break;
   }
   if (readFATEntry(entry.Name).Size < getPTEntry(PTIndex).Registers[3]) updateLoopAddr(PTIndex, 0);
-//  if (entry.Registers[0] != -1) {
-//    Serial.println(getPTEntry(PTIndex).Registers[2]);
-//    Serial.println(getPTEntry(PTIndex).Registers[3]);
-//  }
+  //  if (entry.Registers[0] != -1) {
+  //    Serial.println(getPTEntry(PTIndex).Registers[2]);
+  //    Serial.println(getPTEntry(PTIndex).Registers[3]);
+  //  }
 }

@@ -63,7 +63,6 @@ int writeTableEntry(byte Name, char type, int Size, int ID) {
   }
   MT newMTEntry = {Name, type, memoryAddr, Size, ID};
   MTEntry[noOfVars++] = newMTEntry;
-  Serial.println("Memorytable Entry created.");
   return memoryAddr;
 }
 /*---------------------------------------------------------------------------*/
@@ -84,8 +83,8 @@ int getSize(int ID, int sp) {
   } else return -1;
 }
 
-void writeMemory(byte Name, int ID, int sp) {
-  int Size = getSize(ID, sp);
+int writeMemory(byte Name, int ID, int sp) {
+  int Size = getSize(ID, sp--);
   char type;
   if (Size == 1) type = 'c';
   else if (Size == 2) type = 'i';
@@ -95,7 +94,7 @@ void writeMemory(byte Name, int ID, int sp) {
   for (int i = Size; i > 0; i--) {
     memory[pos + (i - 1)] = popByte(ID, sp--);                  //-1 because pos is the addr of the start value, so if you write backwards you have to go 1 element lower.
   }
-  Serial.println("Data written to memory.");
+  return sp;
 }
 /*---------------------------------------------------------------------------*/
 MT getMTEntry(byte Name, int ID) {
@@ -113,34 +112,28 @@ char getType(int Size) {
   else return 's';
 }
 
-bool readMemory(byte Name, int ID, int sp) {
+int readMemory(byte Name, int ID, int sp) {
   MT MTEntry = getMTEntry(Name, ID);
   if (MTEntry.type == NULL) {
-    Serial.println("This combination doesn't exist in the memory.");
-    return false;
+    return -1;
   }
   int Size = MTEntry.Size;
+  byte *p = numToByte(MTEntry.Size);
   int addr = MTEntry.addr;
-  char type = getType(Size);
-  for (int i = addr; i < (addr + Size); i++) pushByte(memory[i], ID, sp++);
-  if (Size > 4) pushByte(Size, ID, sp++);
-  char temp[1];
-  temp[0] = type;
-  byte* b = strToByte(temp, 1);
-  pushByte(*(b), ID, sp++);
+  byte b = getType(Size);
+  for (int i = addr; i < (addr + Size); i++) {
+    pushByte(memory[i], ID, sp++);
+  }
+  if (Size > 4) {
+    pushByte(*(p), ID, sp++);
+    pushByte(*(p + 1), ID, sp++);
+  }
+  pushByte(b, ID, sp++);
+  return sp;
 }
 /*---------------------------------------------------------------------------*/
 void printTable() {
   for (MT entry : MTEntry) if (entry.type != NULL) Serial.println(entry.type);
-}
-
-void setMem() {
-  memory[100] = 42;
-  memory[101] = 0;
-  memory[102] = 105;
-
-  MT newMTEntry = {97, 'i', 100, 2, 0};
-  MTEntry[noOfVars++] = newMTEntry;
 }
 
 void clearTable() {

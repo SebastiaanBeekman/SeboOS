@@ -20,7 +20,7 @@ int writePTEntry(char Name[]) {
   if (checkPTSize()) {
     Serial.println("There is no free space in the Processtable...");
     return -1;
-  } else if (FATEntry.Size == 0) {
+  } else if (strncmp(Name, FATEntry.Name, 12) != 0) {
     Serial.println("This file doesn't exist...");
     return -1;
   }
@@ -36,7 +36,6 @@ int writePTEntry(char Name[]) {
   PTEntry.Registers[3] = 0;
   
   PTArray[IDCounter] = PTEntry;
-  Serial.println("Processtable Entry created.");
   return IDCounter;
 }
 /*-----------------------------------------------------------------*/
