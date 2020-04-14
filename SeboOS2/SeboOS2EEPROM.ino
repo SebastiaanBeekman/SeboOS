@@ -42,23 +42,22 @@ FAT* sortFAT() {
 }
 
 int checkAllocSpaceEEPROM(byte fileSize) {
-  FAT* tempFAT = sortFAT();                                                                                //Use sorted FAT
-  Serial.print("FAT: ");
-  Serial.println(tempFAT[0].Size);
-
-  if (noOfFiles == 0) return 161;
-  else if (noOfFiles == 1) return 161 + tempFAT[0].Size;
-  else if (noOfFiles == 2) return 161 + tempFAT[0].Size + tempFAT[1].Size;
+  FAT* tempFAT = sortFAT();                                                                              //Use sorted FAT
+  int returnVal = 161;
 
   for (int i = 0; i < noOfFiles; i++) {
-    if (tempFAT[i + 1].beginPos - (tempFAT[i].beginPos + tempFAT[i].Size) > fileSize) {                    //Compare the space between the EEPROM adresses
-      return tempFAT[i].beginPos + tempFAT[i].Size;
-    }
+    returnVal += tempFAT[i].Size;
   }
-  if (EEPROM.length() - (tempFAT[noOfFiles].beginPos + tempFAT[noOfFiles].Size) > fileSize) {              //Check if there's space between last FAT and size of EEPROM
-    return tempFAT[noOfFiles].beginPos + tempFAT[noOfFiles].Size;
-  }
-  return -1;
+  return returnVal;
+//  for (int i = 0; i < noOfFiles; i++) {
+//    if (tempFAT[i + 1].beginPos - (tempFAT[i].beginPos + tempFAT[i].Size) > fileSize) {                    //Compare the space between the EEPROM adresses
+//      return tempFAT[i].beginPos + tempFAT[i].Size;
+//    }
+//  }
+//  if (EEPROM.length() - (tempFAT[noOfFiles].beginPos + tempFAT[noOfFiles].Size) > fileSize) {              //Check if there's space between last FAT and size of EEPROM
+//    return tempFAT[noOfFiles].beginPos + tempFAT[noOfFiles].Size;
+//  }
+//  return -1;
 }
 
 bool checkFATDuplicates(char Name[]) {

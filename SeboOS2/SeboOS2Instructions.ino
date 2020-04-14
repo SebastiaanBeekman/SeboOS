@@ -133,6 +133,60 @@ void getInstruction(int PTIndex) {
   updateInstructionRegisters(PTIndex, newSP, loopAddr);
 }
 
+void unairInstructions(int PTIndex) {
+  PT entry = getPTEntry(PTIndex);
+  int pc = entry.Registers[0];
+  int sp = entry.Registers[2];
+  int loopAddr = entry.Registers[3];
+
+  int Size = getSize(PTIndex, sp--);
+  char type;
+  if (Size == 1) type = 'c';
+  else if (Size == 2) type = 'i';
+  else if (Size == 4) type = 'f';
+  else type = 's';
+
+  if (Size > 4) sp--;                                                                               //lower sp for pop size in getSize
+  byte byteArray[Size] = {};
+  for (int i = 1; i <= Size; i++) {
+    byteArray[Size - i] = popByte(PTIndex, sp--);
+  }
+
+  switch (pc) {
+    case INCREMENT:
+      if (Size == 1) {                                                                               //Char
+        byteArray[0]++;
+      } else if (Size == 2) {                                                                        //Int
+        if (byteArray[0] + 1 >= 256) {
+          byteArray[0]++;
+          byteArray[1] -= byteArray[0];
+        } else {
+          byteArray[1]++;
+        }
+      }
+      break;
+    case DECREMENT:
+      if (Size == 1) {                                                                               //Char
+        byteArray[0]--;
+      } else if (Size == 2) {                                                                        //Int
+        if (byteArray[0] - 1 <= 0) {
+          byteArray[0]--;
+          byteArray[1] = 256;
+        } else {
+          byteArray[1]--;
+        }
+      }
+      break;
+  }
+
+  for (int i = 0; i < Size; i++) {
+    pushByte(byteArray[i], PTIndex, sp++);
+  }
+  pushByte(type, PTIndex, sp++);
+  loopAddr++;
+  updateInstructionRegisters(PTIndex, sp, loopAddr);
+}
+
 void execute(int PTIndex) {
   PT entry = getPTEntry(PTIndex);
   switch (entry.Registers[0]) {
@@ -155,10 +209,10 @@ void execute(int PTIndex) {
       getInstruction(PTIndex);
       break;
     case INCREMENT:
-      Serial.println("INCREMENT type");
+      unairInstructions(PTIndex);
       break;
     case DECREMENT:
-      Serial.println("DECREMENT type");
+      unairInstructions(PTIndex);
       break;
     case PLUS:
       Serial.println("PLUS type");

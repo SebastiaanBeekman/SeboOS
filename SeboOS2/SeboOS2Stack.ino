@@ -5,6 +5,7 @@ static byte stack[STACKAMOUNT][STACKSIZE];
 
 void pushByte(byte b, int processID, int sp) {
   stack[processID][sp] = b;
+//  Serial.println(stack[processID][sp]);
 }
 
 byte popByte(int processID, int sp) {
