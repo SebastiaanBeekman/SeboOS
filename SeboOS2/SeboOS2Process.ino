@@ -60,6 +60,15 @@ void terminateProcess(int PTNum) {
   IDCounter--;
 }
 
+void terminate2(int processID) {
+  for (int i = 0; i < PTSIZE; i++) {
+    if (PTArray[i].ID == processID && PTArray[i].state != -1 && strcmp(PTArray[i].Name,"") != 0) {
+      terminateProcess(i);
+      i = 0;
+    }
+  }
+}
+
 bool PRK(int ID, int state) {
   int PTAddr = checkID(ID);
   if (PTAddr == -1) {
@@ -67,7 +76,7 @@ bool PRK(int ID, int state) {
     return false;
   }
   if (state == -1) {
-    terminateProcess(PTAddr);
+    terminate2(ID);
     Serial.print("Process ");
     Serial.print(ID);
     Serial.println(" terminated.");

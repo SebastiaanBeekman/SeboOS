@@ -25,9 +25,10 @@ void executeInstruction(int PTIndex) {
     loopAddr++;
     *(p + (i - entry.Registers[3])) = readEEPROM(entry.Name, i);
     instruction = instructionAdapter();
+    if (readEEPROM(entry.Name, i + 1) != ',' && i < (readFATEntry(entry.Name).Size - 1)) instruction = -1;
     if (instruction != -1) break;
   }
-  if (loopAddr >= (readFATEntry(entry.Name).Size - 1)) {
+  if (loopAddr >= (readFATEntry(entry.Name).Size)) {
     loopAddr = 0;
   }
   updateProcessRegisters(PTIndex, instruction, loopAddr++);                                             //Extra ++ to set it to the next byte (comma)
@@ -108,7 +109,7 @@ int instructionAdapter() {
   else if (strcmp(instruction, "ENDWHILE") == 0) return 132;
   else if (strcmp(instruction, "LOOP") == 0) return 133;
   else if (strcmp(instruction, "ENDLOOP") == 0) return 134;
-  else if (strcmp(instruction, "STOP") == 0) return 135;
+  else if (strncmp(instruction, "STOP", 4) == 0) return 135;
   else if (strcmp(instruction, "FORK") == 0) return 136;
   else if (strcmp(instruction, "WAITUNTILDONE") == 0) return 137;
   else return -1;
