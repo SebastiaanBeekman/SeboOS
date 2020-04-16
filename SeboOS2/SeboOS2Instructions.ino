@@ -74,7 +74,7 @@ void stringInstruction(int PTIndex) {
   char stringArray[STRINGSIZE] = {};
   int loopCounter = 0;
   byte b;
-
+  sp++;
   do {
     b = readEEPROM(entry.Name, loopAddr++);                                                             //Close quote
     if (b != 39 && b != 44) {
@@ -83,31 +83,34 @@ void stringInstruction(int PTIndex) {
         loopAddr++;
       }
       else stringArray[loopCounter++] = b;
-      pushByte(b, entry.ID, ++sp);
+      pushByte(b, entry.ID, sp++);
     }
   } while (b != 48);
   loopAddr++;                                                                                         //Next instruction
-  pushByte(loopCounter, entry.ID, ++sp);
-  pushByte('s', entry.ID, ++sp);
+  pushByte(loopCounter, entry.ID, sp++);
+  pushByte('s', entry.ID, sp);
   updateInstructionRegisters(PTIndex, sp, loopAddr);
 }
 
-void printInstruction(int PTIndex) {
+void printInstruction(int PTIndex, bool newLine) {
   PT entry = getPTEntry(PTIndex);
   int sp = entry.Registers[2];
   int loopAddr = entry.Registers[3];
   int printSize;
   byte byteArray[2] = {};
   char type = popByte(PTIndex, sp--);
-  if (type == 's') printSize = popByte(PTIndex, sp--) - 1;
+  if (type == 's') printSize = popByte(PTIndex, sp--);
   else if (type == 'c') printSize = 1;
   else if (type == 'i') printSize = 2;
   else if (type == 'f') printSize = 4;
-
+  byte stringArray[printSize] = {};
   if (type == 's') {
-    for (int i = printSize; i > 1; i--) {
-      byte b = popByte(PTIndex, printSize - sp--);
-      Serial.print((char)b);
+    for (int i = printSize; i > 0; i--) {
+      stringArray[i] = popByte(PTIndex, sp--);
+    }
+    for (int i = 0; i < printSize; i++) {
+      if (stringArray[i] == 92) Serial.println();
+      else Serial.print((char)stringArray[i]);
     }
   } else {
     for (int i = printSize; i > 0; i--) {
@@ -117,10 +120,10 @@ void printInstruction(int PTIndex) {
       else if (type == 'f') Serial.print((float)b);
     }
   }
-  if (type == 'i') Serial.println((byteArray[1] * 256) + byteArray[0]);
-  else Serial.println();
+  if (type == 'i') Serial.print((byteArray[1] * 256) + byteArray[0]);
+  if (newLine) Serial.println();
   loopAddr++;
-  updateInstructionRegisters(PTIndex, sp - printSize, loopAddr);
+  updateInstructionRegisters(PTIndex, sp, loopAddr);
 }
 
 void stopInstruction(int PTIndex) {
@@ -837,6 +840,152 @@ void binairInstructions(int PTIndex) {
   updateInstructionRegisters(PTIndex, sp, loopAddr);
 }
 
+void loopInstruction(int PTIndex) {
+  PT entry = getPTEntry(PTIndex);
+  int loopAddr = entry.Registers[3];
+  loopAddr++;                                                                            //Next instruction
+  updateEndLoop(PTIndex, loopAddr);
+  updateLoopAddr(PTIndex, loopAddr);
+}
+
+void endLoopInstruction(int PTIndex) {
+  PT entry = getPTEntry(PTIndex);
+  int loopAddr = entry.Registers[3];
+  int startLoop = entry.Registers[4];
+
+  updateLoopAddr(PTIndex, startLoop);
+}
+
+void delayInstruction(int PTIndex) {
+  PT entry = getPTEntry(PTIndex);
+  int sp = entry.Registers[2];
+  int loopAddr = entry.Registers[3];
+
+  int printSize;
+  char type = popByte(PTIndex, sp--);
+  if (type == 'c') printSize = 1;
+  else if (type == 'i') printSize = 2;
+  else if (type == 'f') printSize = 4;
+
+  byte byteArray[printSize] = {};
+  for (int i = 1; i <= printSize; i++) {
+    byteArray[printSize - i] = popByte(PTIndex, sp--);
+  }
+
+  if (printSize == 1) delay(byteArray[0]);
+  else if (printSize == 2) delay(calcByteInt(byteArray[0], byteArray[1]));
+
+  loopAddr++;
+  updateInstructionRegisters(PTIndex, sp, loopAddr);
+}
+
+void ifInstruction(int PTIndex) {
+  PT entry = getPTEntry(PTIndex);
+  int sp = entry.Registers[2];
+  int loopAddr = entry.Registers[3];
+  popByte(PTIndex, sp--);
+  char statement = popByte(PTIndex, sp--);
+
+  int num1;
+  int counter = 0;
+  int numArray[3] = {};
+
+  loopAddr++;                                                                                        //Comma
+  numArray[counter] = readEEPROM(entry.Name, loopAddr++) - 48;
+  if (readEEPROM(entry.Name, loopAddr) != ',' && readEEPROM(entry.Name, loopAddr + 1) != ',') {
+    numArray[++counter] = readEEPROM(entry.Name, loopAddr++) - 48;
+    numArray[++counter] = readEEPROM(entry.Name, loopAddr++) - 48;
+  }
+  else if (readEEPROM(entry.Name, loopAddr) != ',') {
+    numArray[++counter] = readEEPROM(entry.Name, loopAddr++) - 48;
+  }
+  num1 = calcInt(numArray, counter);
+  loopAddr++;
+  if (statement == 48) {
+    loopAddr += num1;
+  }
+  if (sp < 0) sp = 0;
+  pushByte(statement, PTIndex, sp++);
+  pushByte('c', PTIndex, sp);
+  updateInstructionRegisters(PTIndex, sp, loopAddr);
+}
+
+void elseInstruction(int PTIndex) {
+  PT entry = getPTEntry(PTIndex);
+  int sp = entry.Registers[2];
+  int loopAddr = entry.Registers[3];
+  popByte(PTIndex, sp--);
+  char statement = popByte(PTIndex, sp--);
+
+  int num1;
+  int counter = 0;
+  int numArray[3] = {};
+
+  loopAddr++;                                                                                        //Comma
+  numArray[counter] = readEEPROM(entry.Name, loopAddr++) - 48;
+  if (readEEPROM(entry.Name, loopAddr) != ',' && readEEPROM(entry.Name, loopAddr + 1) != ',') {
+    numArray[++counter] = readEEPROM(entry.Name, loopAddr++) - 48;
+    numArray[++counter] = readEEPROM(entry.Name, loopAddr++) - 48;
+  }
+  else if (readEEPROM(entry.Name, loopAddr) != ',') {
+    numArray[++counter] = readEEPROM(entry.Name, loopAddr++) - 48;
+  }
+  num1 = calcInt(numArray, counter);
+  loopAddr++;
+  if (statement == 49) {
+    loopAddr += num1;
+  }
+  if (sp < 0) sp = 0;
+  pushByte(statement, PTIndex, sp++);
+  pushByte('c', PTIndex, sp);
+  updateInstructionRegisters(PTIndex, sp, loopAddr);
+}
+
+void endIfInstruction(int PTIndex) {
+  PT entry = getPTEntry(PTIndex);
+  int sp = entry.Registers[2];
+  int loopAddr = entry.Registers[3];
+  popByte(PTIndex, sp--);
+  char statement = popByte(PTIndex, sp--);
+  updateInstructionRegisters(PTIndex, sp, loopAddr);
+}
+
+void millisInstruction(int PTIndex) {
+  PT entry = getPTEntry(PTIndex);
+  int sp = entry.Registers[2];
+  int loopAddr = entry.Registers[3];
+  byte *p = calcIntByte(millis());
+  pushByte(*(p), PTIndex, sp++);
+  pushByte(*(p+1), PTIndex, sp++);
+  pushByte('i', PTIndex, sp);
+  loopAddr++;
+  updateMillis(PTIndex, loopAddr - 7);
+  updateInstructionRegisters(PTIndex, sp, loopAddr);
+}
+
+void delayUntilInstruction(int PTIndex) {
+  PT entry = getPTEntry(PTIndex);
+  int sp = entry.Registers[2];
+  int loopAddr = entry.Registers[3];
+  int millisAddr = entry.Registers[5];
+
+  int printSize;
+  char type = popByte(PTIndex, sp--);
+  if (type == 'c') printSize = 1;
+  else if (type == 'i') printSize = 2;
+  else if (type == 'f') printSize = 4;
+
+  byte byteArray[printSize] = {};
+  for (int i = 1; i <= printSize; i++) {
+    byteArray[printSize - i] = popByte(PTIndex, sp--);
+  }
+  int i = calcByteInt(byteArray[0], byteArray[1]);
+  int i2 = millis();
+  if (i > i2) loopAddr = millisAddr;
+  else loopAddr++; 
+  updateInstructionRegisters(PTIndex, sp, loopAddr);
+}
+
 void execute(int PTIndex) {
   PT entry = getPTEntry(PTIndex);
   switch (entry.Registers[0]) {
@@ -901,25 +1050,25 @@ void execute(int PTIndex) {
       binairInstructions(PTIndex);
       break;
     case LOGICALAND:
-      Serial.println("LOGICALAND type");
+      binairInstructions(PTIndex);
       break;
     case LOGICALOR:
-      Serial.println("LOGICALOR type");
+      binairInstructions(PTIndex);
       break;
     case LOGICALXOR:
-      Serial.println("LOGICALXOR type");
+      binairInstructions(PTIndex);
       break;
     case LOGICALNOT:
       unairInstructions(PTIndex);
       break;
     case BITWISEAND:
-      Serial.println("BITWISEAND type");
+      binairInstructions(PTIndex);
       break;
     case BITWISEOR:
-      Serial.println("BITWISEOR type");
+      binairInstructions(PTIndex);
       break;
     case BITWISEXOR:
-      Serial.println("BITWISEXOR type");
+      binairInstructions(PTIndex);
       break;
     case BITWISENOT:
       unairInstructions(PTIndex);
@@ -967,13 +1116,13 @@ void execute(int PTIndex) {
       unairInstructions(PTIndex);
       break;
     case DELAY:
-      Serial.println("DELAY type");
+      delayInstruction(PTIndex);
       break;
     case DELAYUNTIL:
-      Serial.println("DELAYUNTIL type");
+      delayUntilInstruction(PTIndex);
       break;
     case MILLIS:
-      Serial.println("MILLIS type");
+      millisInstruction(PTIndex);
       break;
     case PINMODE:
       Serial.println("PINMODE type");
@@ -991,7 +1140,10 @@ void execute(int PTIndex) {
       Serial.println("DIGITALWRITE type");
       break;
     case PRINT:
-      printInstruction(PTIndex);
+      printInstruction(PTIndex, false);
+      break;
+    case PRINTLN:
+      printInstruction(PTIndex, true);
       break;
     case OPEN:
       Serial.println("OPEN type");
@@ -1015,13 +1167,13 @@ void execute(int PTIndex) {
       Serial.println("READSTRING type");
       break;
     case IF:
-      Serial.println("IF type");
+      ifInstruction(PTIndex);
       break;
     case ELSE:
-      Serial.println("ELSE type");
+      elseInstruction(PTIndex);
       break;
     case ENDIF:
-      Serial.println("ENDIF type");
+      endIfInstruction(PTIndex);
       break;
     case WHILE:
       Serial.println("WHILE type");
@@ -1030,10 +1182,10 @@ void execute(int PTIndex) {
       Serial.println("ENDWHILE type");
       break;
     case LOOP:
-      Serial.println("LOOP type");
+      loopInstruction(PTIndex);
       break;
     case ENDLOOP:
-      Serial.println("ENDLOOP type");
+      endLoopInstruction(PTIndex);
       break;
     case STOP:
       stopInstruction(PTIndex);

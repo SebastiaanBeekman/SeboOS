@@ -7,6 +7,9 @@ PT* getPTArray() {
   return PTArray;
 }
 
+int getIDCounter() {
+  return IDCounter;
+}
 /*-----------------------------------------------------------------*/
 bool checkPTSize() {
   for (int i = 0; i < PTSIZE; i++) {
@@ -24,7 +27,7 @@ int writePTEntry(char Name[]) {
     Serial.println("This file doesn't exist...");
     return -1;
   }
-  int Register[] = {0, 0, 0, 0};                         //Order: Program Counter, File Pointer, Stack Pointer, loop addr
+  int Register[] = {0, 0, 0, 0, 0, 0};                                    //Order: Program Counter, File Pointer, Stack Pointer, loop addr, loopBegin, delayBegin, ifElseRegister
   PT PTEntry = {Name, 0, 0, Register};
   //Bug where assigning the data instantly doesn't work, but after creation it does.
   strcpy(PTEntry.Name, Name);
@@ -34,6 +37,8 @@ int writePTEntry(char Name[]) {
   PTEntry.Registers[1] = FATEntry.beginPos; 
   PTEntry.Registers[2] = -1;
   PTEntry.Registers[3] = 0;
+  PTEntry.Registers[4] = 0;                                               //loopInstruction
+  PTEntry.Registers[5] = 0;                                               //millis
   
   PTArray[IDCounter] = PTEntry;
   return IDCounter;
@@ -106,6 +111,14 @@ void updateInstructionRegisters(int index, int sp, int loopAddr) {
 
 void updateLoopAddr(int index, int loopAddr) {
   PTArray[index].Registers[3] = loopAddr;
+}
+
+void updateEndLoop(int index, int endLoop) {
+  PTArray[index].Registers[4] = endLoop;
+}
+
+void updateMillis(int index, int delayBegin) {
+  PTArray[index].Registers[5] = delayBegin;
 }
 /*-----------------------------------------------------------------*/
 void printProcessList() {

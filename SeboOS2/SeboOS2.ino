@@ -16,7 +16,7 @@ typedef struct {
   char Name[12];
   int ID;
   int state;                                                              //States: 1 (Running), 0 (pauzed), -1 (Terminated)
-  int Registers[4];                                                       //Order: PC, FP, SP, loop addr
+  int Registers[5];                                                       //Order: PC, FP, SP, loop addr
 } PT;
 
 static bool flag = true;
@@ -34,7 +34,6 @@ void setup() {
 void loop() {
   if (flag) {
 //    clearFAT();
-//    fillFAT();
   } flag = false;
   if (readInput()) {
     int test = checkCommand(getFunctionBuffer());
